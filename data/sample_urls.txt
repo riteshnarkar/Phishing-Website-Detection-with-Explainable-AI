@@ -1,0 +1,13 @@
+# Legitimate URLs
+https://www.google.com
+https://www.github.com
+https://stackoverflow.com/questions
+https://www.wikipedia.org
+https://www.microsoft.com
+
+# Suspicious URLs (for testing - these are fake)
+http://paypal-security-update.tk/login
+http://amazon-verify-account.ml/signin
+http://facebook-account-suspended.ga/urgent
+http://192.168.1.100/banking/login.php
+http://secure-microsoft-login.cf/account
