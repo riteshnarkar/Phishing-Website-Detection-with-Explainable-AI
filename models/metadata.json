@@ -1,0 +1,117 @@
+{
+  "feature_names": [
+    "url_length",
+    "domain_length",
+    "path_length",
+    "special_char_count",
+    "dots_count",
+    "hyphens_count",
+    "underscores_count",
+    "digits_count",
+    "has_https",
+    "has_www",
+    "has_at_symbol",
+    "has_ip_address",
+    "subdomain_count",
+    "url_depth",
+    "has_port",
+    "query_length",
+    "params_count",
+    "has_suspicious_words",
+    "entropy",
+    "has_login_form",
+    "forms_count",
+    "input_fields_count",
+    "has_javascript",
+    "scripts_count",
+    "has_iframes",
+    "iframes_count",
+    "total_links",
+    "external_links",
+    "external_links_ratio",
+    "images_count",
+    "has_favicon",
+    "content_length",
+    "has_title",
+    "meta_tags_count",
+    "has_meta_refresh",
+    "has_popup_patterns",
+    "has_suspicious_js",
+    "domain_age",
+    "domain_expiry_days",
+    "has_ssl",
+    "ssl_age",
+    "ssl_valid",
+    "dns_records_count",
+    "has_mx_record",
+    "has_spf_record",
+    "has_dmarc_record"
+  ],
+  "training_history": {
+    "random_forest": {
+      "best_params": {
+        "max_depth": 10,
+        "max_features": "sqrt",
+        "min_samples_leaf": 1,
+        "min_samples_split": 2,
+        "n_estimators": 100
+      },
+      "best_cv_score": 1.0,
+      "cv_scores": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "cv_mean": 1.0,
+      "cv_std": 0.0,
+      "training_time": 78.57962,
+      "trained_at": "2025-08-30T18:06:53.144790"
+    },
+    "xgboost": {
+      "best_params": {
+        "colsample_bytree": 0.8,
+        "learning_rate": 0.01,
+        "max_depth": 3,
+        "n_estimators": 100,
+        "subsample": 0.8
+      },
+      "best_cv_score": 1.0,
+      "cv_scores": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "cv_mean": 1.0,
+      "cv_std": 0.0,
+      "training_time": 93.698574,
+      "trained_at": "2025-08-30T18:08:27.549408"
+    },
+    "neural_network": {
+      "best_params": {
+        "activation": "relu",
+        "alpha": 0.0001,
+        "hidden_layer_sizes": [
+          100
+        ],
+        "learning_rate": "constant"
+      },
+      "best_cv_score": 1.0,
+      "cv_scores": [
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ],
+      "cv_mean": 1.0,
+      "cv_std": 0.0,
+      "training_time": 24.430183,
+      "trained_at": "2025-08-30T18:08:57.226997"
+    }
+  },
+  "label_encoder_classes": null
+}
