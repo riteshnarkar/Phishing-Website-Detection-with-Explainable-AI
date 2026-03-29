@@ -60,23 +60,23 @@
       ],
       "cv_mean": 1.0,
       "cv_std": 0.0,
-      "training_time": 1.157349,
-      "trained_at": "2026-03-29T19:49:27.644567"
+      "training_time": 1.249097,
+      "trained_at": "2026-03-29T22:44:29.078478"
     },
     "xgboost": {
       "best_params": {},
       "best_cv_score": -1,
       "cv_scores": [
+        0.9993753903810119,
         1.0,
         1.0,
-        0.9993746091307067,
         1.0,
-        0.9993753903810119
+        1.0
       ],
-      "cv_mean": 0.9997499999023438,
-      "cv_std": 0.00030618643712193805,
-      "training_time": 0.299603,
-      "trained_at": "2026-03-29T19:49:29.406625"
+      "cv_mean": 0.9998750780762024,
+      "cv_std": 0.00024984384759525475,
+      "training_time": 0.25218,
+      "trained_at": "2026-03-29T22:44:30.659778"
     },
     "neural_network": {
       "best_params": {},
@@ -90,8 +90,8 @@
       ],
       "cv_mean": 1.0,
       "cv_std": 0.0,
-      "training_time": 1.893486,
-      "trained_at": "2026-03-29T19:49:38.642162"
+      "training_time": 1.359956,
+      "trained_at": "2026-03-29T22:44:37.677151"
     }
   },
   "label_encoder_classes": null
