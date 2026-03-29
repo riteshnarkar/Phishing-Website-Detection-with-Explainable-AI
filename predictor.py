@@ -154,8 +154,24 @@ class PhishingPredictor:
         prediction = model.predict(features_scaled)[0]
         prediction_proba = model.predict_proba(features_scaled)[0]
         
+        # Get raw model probability
+        raw_phishing_prob = float(prediction_proba[1])
+        
+        # Apply heuristic guardrails to catch false negatives
+        phishing_prob, guardrail_reasons = self._apply_heuristic_guardrails(
+            raw_phishing_prob, features_dict, url
+        )
+        
+        if guardrail_reasons:
+            print(f"GUARDRAIL: Adjusted phishing_prob {raw_phishing_prob:.4f} -> {phishing_prob:.4f}")
+            for reason in guardrail_reasons:
+                print(f"  - {reason}")
+        
+        # Use adjusted threshold (0.45 instead of 0.5) for higher phishing sensitivity
+        PHISHING_THRESHOLD = 0.45
+        prediction = 1 if phishing_prob >= PHISHING_THRESHOLD else 0
+        
         # Calculate confidence and risk level
-        phishing_prob = prediction_proba[1]
         confidence = phishing_prob if prediction == 1 else (1 - phishing_prob)
         
         result = {
@@ -163,10 +179,12 @@ class PhishingPredictor:
             'prediction': 'phishing' if prediction == 1 else 'legitimate',
             'confidence': float(confidence),
             'phishing_probability': float(phishing_prob),
+            'raw_model_probability': raw_phishing_prob,
             'risk_level': self._get_risk_level(phishing_prob, prediction),
             'model_used': model_name,
             'timestamp': datetime.now().isoformat(),
-            'features': features_dict
+            'features': features_dict,
+            'guardrail_adjustments': guardrail_reasons
         }
         
         # CORRECTED: Use enhanced explainer for all explanation levels
@@ -237,6 +255,98 @@ class PhishingPredictor:
                 })
         
         return results
+    
+    def _apply_heuristic_guardrails(self, raw_phishing_prob, features_dict, url):
+        """
+        Apply heuristic guardrails to catch obvious phishing signals
+        that the ML model might miss (reducing false negatives).
+        
+        These only INCREASE phishing probability, never decrease it.
+        
+        Args:
+            raw_phishing_prob (float): Raw model prediction probability
+            features_dict (dict): Extracted features
+            url (str): The URL being analyzed
+            
+        Returns:
+            tuple: (adjusted_probability, list_of_reasons)
+        """
+        adjustments = []
+        boost = 0.0
+        
+        # 1. IP address as domain — very strong phishing signal
+        if features_dict.get('has_ip_address', 0) == 1:
+            boost += 0.30
+            adjustments.append("IP address used as domain (+0.30)")
+        
+        # 2. @ symbol in URL — URL obfuscation technique
+        if features_dict.get('has_at_symbol', 0) == 1:
+            boost += 0.20
+            adjustments.append("@ symbol in URL - potential redirect trick (+0.20)")
+        
+        # 3. Very new domain (< 30 days) AND domain age was successfully retrieved
+        domain_age = features_dict.get('domain_age', -1)
+        if 0 <= domain_age < 30:
+            boost += 0.15
+            adjustments.append(f"Very new domain ({domain_age} days old) (+0.15)")
+        elif 30 <= domain_age < 90:
+            boost += 0.08
+            adjustments.append(f"New domain ({domain_age} days old) (+0.08)")
+        
+        # 4. No HTTPS + has login form — credential harvesting risk
+        if features_dict.get('has_https', 0) == 0 and features_dict.get('has_login_form', 0) == 1:
+            boost += 0.20
+            adjustments.append("Login form on non-HTTPS page (+0.20)")
+        
+        # 5. No HTTPS alone is a moderate signal
+        elif features_dict.get('has_https', 0) == 0:
+            boost += 0.05
+            adjustments.append("No HTTPS encryption (+0.05)")
+        
+        # 6. Extremely long URL with many special characters
+        url_length = features_dict.get('url_length', 0)
+        special_chars = features_dict.get('special_char_count', 0)
+        if url_length > 100 and special_chars > 8:
+            boost += 0.10
+            adjustments.append(f"Long URL ({url_length} chars) with many special chars ({special_chars}) (+0.10)")
+        elif url_length > 150:
+            boost += 0.10
+            adjustments.append(f"Extremely long URL ({url_length} chars) (+0.10)")
+        
+        # 7. Multiple suspicious keywords (≥2)
+        suspicious_words = features_dict.get('has_suspicious_words', 0)
+        if suspicious_words >= 3:
+            boost += 0.12
+            adjustments.append(f"Multiple suspicious keywords ({suspicious_words} found) (+0.12)")
+        elif suspicious_words >= 2:
+            boost += 0.06
+            adjustments.append(f"Suspicious keywords ({suspicious_words} found) (+0.06)")
+        
+        # 8. Has suspicious JavaScript patterns
+        if features_dict.get('has_suspicious_js', 0) >= 2:
+            boost += 0.08
+            adjustments.append(f"Suspicious JavaScript patterns detected (+0.08)")
+        
+        # 9. Meta refresh redirect (auto-redirect)
+        if features_dict.get('has_meta_refresh', 0) == 1:
+            boost += 0.06
+            adjustments.append("Auto-redirect via meta refresh (+0.06)")
+        
+        # 10. No SSL + no MX record + no SPF (poorly configured domain)
+        if (features_dict.get('has_ssl', 0) == 0 and 
+            features_dict.get('has_mx_record', 0) == 0 and 
+            features_dict.get('has_spf_record', 0) == 0):
+            boost += 0.10
+            adjustments.append("Poorly configured domain (no SSL, MX, or SPF) (+0.10)")
+        
+        # Apply boost with diminishing returns (cap at 0.95 total probability)
+        if boost > 0:
+            adjusted_prob = raw_phishing_prob + boost * (1 - raw_phishing_prob)
+            adjusted_prob = min(adjusted_prob, 0.98)  # Cap at 0.98
+        else:
+            adjusted_prob = raw_phishing_prob
+        
+        return adjusted_prob, adjustments
     
     def _get_risk_level(self, probability, prediction):
         """Determine risk level based on prediction probability."""
