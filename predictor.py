@@ -259,9 +259,8 @@ class PhishingPredictor:
     def _apply_heuristic_guardrails(self, raw_phishing_prob, features_dict, url):
         """
         Apply heuristic guardrails to catch obvious phishing signals
-        that the ML model might miss (reducing false negatives).
-        
-        These only INCREASE phishing probability, never decrease it.
+        that the ML model might miss (reducing false negatives), and
+        discount probabilities for extremely trusted domains (reducing false positives).
         
         Args:
             raw_phishing_prob (float): Raw model prediction probability
@@ -338,13 +337,41 @@ class PhishingPredictor:
             features_dict.get('has_spf_record', 0) == 0):
             boost += 0.10
             adjustments.append("Poorly configured domain (no SSL, MX, or SPF) (+0.10)")
+            
+        # POSITIVE GUARDRAILS (Discounts for highly legitimate signs)
+        discount = 0.0
         
-        # Apply boost with diminishing returns (cap at 0.95 total probability)
+        # 11. Ancient domain (> 10 years / 3650 days) with valid SSL + MX
+        domain_age = features_dict.get('domain_age', -1)
+        if domain_age > 3650 and features_dict.get('has_ssl', 0) == 1 and features_dict.get('has_mx_record', 0) == 1:
+            discount += 0.60
+            adjustments.append(f"Highly established ancient domain (>10 years) with valid SSL/MX (-0.60)")
+            
+        # 12. Very old established domain (> 3 years / 1000 days) with valid SSL + MX
+        elif domain_age > 1000 and features_dict.get('has_ssl', 0) == 1 and features_dict.get('has_mx_record', 0) == 1:
+            discount += 0.30
+            adjustments.append(f"Established older domain (>3 years) with valid SSL/MX (-0.30)")
+
+        # 13. Perfect email/DNS configurations (MX + SPF + DMARC)
+        if (features_dict.get('has_mx_record', 0) == 1 and 
+            features_dict.get('has_spf_record', 0) == 1 and 
+            features_dict.get('has_dmarc_record', 0) == 1):
+            discount += 0.15
+            adjustments.append("Perfectly configured DNS/Email framework (MX, SPF, DMARC) (-0.15)")
+        
+        # Apply boost with diminishing returns (cap at 0.98 total probability)
+        adjusted_prob = raw_phishing_prob
+        
         if boost > 0:
-            adjusted_prob = raw_phishing_prob + boost * (1 - raw_phishing_prob)
+            adjusted_prob = adjusted_prob + boost * (1 - adjusted_prob)
             adjusted_prob = min(adjusted_prob, 0.98)  # Cap at 0.98
-        else:
-            adjusted_prob = raw_phishing_prob
+            
+        # Apply discounts 
+        if discount > 0:
+            # Multiplicative reduction
+            adjusted_prob = adjusted_prob * (1 - discount)
+            # Ensure it doesn't go below 0.001
+            adjusted_prob = max(adjusted_prob, 0.001)
         
         return adjusted_prob, adjustments
     
