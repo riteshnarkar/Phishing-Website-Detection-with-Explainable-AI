@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhishGuard | AI-Powered Phishing Detection</title>
+    <meta name="description"
+        content="PhishGuard uses advanced AI and explainable machine learning to detect phishing URLs in real-time. Analyze URLs instantly with detailed risk explanations.">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+    <!-- Bootstrap 5 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Outfit + Inter -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* ============================================
+           DESIGN TOKENS
+           ============================================ */
+        :root {
+            --bg-primary: linear-gradient(135deg, #05060b 0%, #111827 50%, #06080f 100%);
+            --bg-secondary: #0c1120;
+            --bg-card: rgba(14, 20, 40, 0.75);
+            --bg-card-hover: rgba(20, 28, 55, 0.85);
+            --glass-border: rgba(99, 102, 241, 0.15);
+            --glass-border-hover: rgba(139, 92, 246, 0.35);
+
+            --accent-indigo: #6366f1;
+            --accent-violet: #8b5cf6;
+            --accent-purple: #a855f7;
+            --accent-cyan: #22d3ee;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-amber: #f59e0b;
+
+            --text-primary: #e8eaf6;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+
+            --gradient-hero: linear-gradient(135deg, #6366f1 0%, #8b5cf6 40%, #a855f7 70%, #c084fc 100%);
+            --gradient-glow: linear-gradient(135deg, rgba(99, 102, 241, 0.5), rgba(139, 92, 246, 0.5), rgba(168, 85, 247, 0.5));
+            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+            --gradient-safe: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+
+            --shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15), 0 0 80px rgba(139, 92, 246, 0.08);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --shadow-elevated: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+            --radius-sm: 10px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            --radius-xl: 32px;
+
+            --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-spring: 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+            --bg-input: rgba(15, 23, 42, 0.6);
+            --bg-input-focus: rgba(15, 23, 42, 0.8);
+            --bg-panel: rgba(15, 23, 42, 0.4);
+            --bg-panel-inner: rgba(15, 23, 42, 0.5);
+            --bg-panel-hover: rgba(20, 28, 55, 0.6);
+            --bg-table-header: rgba(15, 23, 42, 0.6);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: linear-gradient(135deg, #1a31de 0%, #22c643 50%, #f8fafc 100%);
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.85);
+            --bg-card-hover: rgba(255, 255, 255, 0.95);
+            --glass-border: rgba(99, 102, 241, 0.2);
+            --glass-border-hover: rgba(139, 92, 246, 0.4);
+
+            --accent-indigo: #4f46e5;
+            --accent-violet: #7c3aed;
+            --accent-purple: #9333ea;
+            --accent-cyan: #0891b2;
+            --accent-emerald: #059669;
+            --accent-rose: #e11d48;
+            --accent-amber: #d97706;
+
+            --text-primary: #0f172a;
+            --text-secondary: #334155;
+            --text-muted: #64748b;
+
+            --gradient-hero: linear-gradient(135deg, #4f46e5 0%, #7c3aed 40%, #9333ea 70%, #d8b4fe 100%);
+            --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.1), 0 0 60px rgba(139, 92, 246, 0.05);
+            --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.08);
+            --shadow-elevated: 0 20px 50px rgba(0, 0, 0, 0.12);
+
+            --bg-input: rgba(255, 255, 255, 0.7);
+            --bg-input-focus: rgba(255, 255, 255, 1);
+            --bg-panel: rgba(255, 255, 255, 0.6);
+            --bg-panel-inner: rgba(255, 255, 255, 0.8);
+            --bg-panel-hover: rgba(248, 250, 252, 0.9);
+            --bg-table-header: rgba(241, 245, 249, 0.8);
+        }
+
+        [data-theme="light"] body::before {
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 10%, rgba(168, 85, 247, 0.08) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 60% at 50% 80%, rgba(34, 211, 238, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse 40% 30% at 10% 60%, rgba(244, 63, 94, 0.04) 0%, transparent 50%);
+        }
+
+        [data-theme="light"] .header-section h1 {
+            background: linear-gradient(135deg, #0f172a, #312e81, #1e1b4b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ============================================
+           RESET & BASE
+           ============================================ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg-primary);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated mesh-gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 20%, rgba(99, 102, 241, 0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 10%, rgba(168, 85, 247, 0.14) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 60% at 50% 80%, rgba(34, 211, 238, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 40% 30% at 10% 60%, rgba(244, 63, 94, 0.06) 0%, transparent 50%);
+            animation: bgPulse 12s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgPulse {
+            0% {
+                opacity: 0.7;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+
+            100% {
+                opacity: 0.8;
+                transform: scale(1.02);
+            }
+        }
+
+        /* Floating particles canvas */
+        #particleCanvas {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* ============================================
+           TYPOGRAPHY
+           ============================================ */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        /* ============================================
+           LAYOUT
+           ============================================ */
+        .page-wrapper {
+            position: relative;
+            z-index: 1;
+            padding: 2rem 0 4rem;
+        }
+
+        .main-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(40px) saturate(1.4);
+            -webkit-backdrop-filter: blur(40px) saturate(1.4);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-glow), var(--shadow-card);
+            overflow: hidden;
+            transition: box-shadow var(--transition-smooth);
+        }
+
+        .main-container:hover {
+            box-shadow: var(--shadow-glow), var(--shadow-elevated);
+        }
+
+        /* ============================================
+           HERO HEADER
+           ============================================ */
+        .header-section {
+            position: relative;
+            padding: 3.5rem 2rem 3rem;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .header-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-hero);
+            opacity: 0.12;
+            animation: headerShimmer 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes headerShimmer {
+            0% {
+                opacity: 0.10;
+            }
+
+            50% {
+                opacity: 0.18;
+            }
+
+            100% {
+                opacity: 0.12;
+            }
+        }
+
+        .header-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-indigo), var(--accent-violet), var(--accent-purple), transparent);
+            opacity: 0.5;
+        }
+
+        .header-icon {
+            width: 72px;
+            height: 72px;
+            border-radius: 20px;
+            background: var(--gradient-hero);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 8px 30px rgba(99, 102, 241, 0.4);
+            animation: iconFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .header-section h1 {
+            font-size: 2.6rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e0e7ff, #c7d2fe, #a5b4fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-section .lead {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 400;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 100px;
+            padding: 6px 16px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--accent-indigo);
+            margin-top: 1rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .header-badge .pulse-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--accent-emerald);
+            border-radius: 50%;
+            animation: pulseDot 2s ease-in-out infinite;
+        }
+
+        @keyframes pulseDot {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.4;
+                transform: scale(0.7);
+            }
+        }
+
+        /* ============================================
+           ANALYSIS SECTION
+           ============================================ */
+        .analysis-section {
+            padding: 2.5rem 2.5rem 3rem;
+        }
+
+        .section-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, var(--glass-border), transparent);
+        }
+
+        /* ============================================
+           URL INPUT
+           ============================================ */
+        .url-input-wrapper {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .url-input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1.5px solid rgba(99, 102, 241, 0.2);
+            border-radius: var(--radius-md);
+            padding: 18px 20px 18px 52px;
+            font-size: 1.05rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+            outline: none;
+        }
+
+        .url-input::placeholder {
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .url-input:focus {
+            border-color: var(--accent-violet);
+            background: var(--bg-input-focus);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12), 0 0 30px rgba(139, 92, 246, 0.08);
+        }
+
+        .url-input-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            transition: color var(--transition-fast);
+            pointer-events: none;
+        }
+
+        .url-input:focus~.url-input-icon {
+            color: var(--accent-violet);
+        }
+
+        /* ============================================
+           MODEL SELECT
+           ============================================ */
+        .model-select {
+            background: var(--bg-input);
+            border: 1.5px solid rgba(99, 102, 241, 0.2);
+            border-radius: var(--radius-md);
+            padding: 18px 16px;
+            font-size: 1rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+            cursor: pointer;
+            outline: none;
+            width: 100%;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+        }
+
+        .model-select:focus {
+            border-color: var(--accent-violet);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12);
+        }
+
+        .model-select option {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        /* ============================================
+           ANALYZE BUTTON
+           ============================================ */
+        .analyze-btn {
+            position: relative;
+            background: var(--gradient-hero);
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 16px 48px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all var(--transition-fast);
+            box-shadow: 0 6px 25px rgba(99, 102, 241, 0.35);
+        }
+
+        .analyze-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, transparent 50%);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(99, 102, 241, 0.45);
+        }
+
+        .analyze-btn:hover::before {
+            opacity: 1;
+        }
+
+        .analyze-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ============================================
+           LOADING STATE
+           ============================================ */
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .spinner-ring {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(99, 102, 241, 0.15);
+            border-top-color: var(--accent-violet);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-text {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            animation: loadingPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadingPulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        /* ============================================
+           RESULT CARD
+           ============================================ */
+        .result-card {
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-top: 2.5rem;
+            background: var(--bg-card);
+            box-shadow: var(--shadow-card);
+            animation: resultSlideUp 0.6s var(--transition-spring) forwards;
+        }
+
+        @keyframes resultSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .result-header {
+            padding: 2rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0.15;
+        }
+
+        .result-header.phishing {
+            background: var(--gradient-danger);
+        }
+
+        .result-header.legitimate {
+            background: var(--gradient-safe);
+        }
+
+        .result-verdict {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 1.3rem;
+            letter-spacing: 0.03em;
+            color: #fff;
+        }
+
+        .result-verdict .verdict-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        .confidence-big {
+            text-align: right;
+            color: #fff;
+        }
+
+        .confidence-big .number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .confidence-big .label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        .result-body {
+            padding: 2rem;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .detail-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .detail-item label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .detail-item .value {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .url-display {
+            background: var(--bg-panel-inner);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            border-radius: var(--radius-sm);
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            word-break: break-all;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        /* Confidence bar */
+        .confidence-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            border-radius: 100px;
+            transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .confidence-fill.high {
+            background: var(--gradient-danger);
+        }
+
+        .confidence-fill.medium {
+            background: linear-gradient(90deg, var(--accent-amber), #f97316);
+        }
+
+        .confidence-fill.low {
+            background: var(--gradient-safe);
+        }
+
+        /* ============================================
+           EXPLANATION SECTION
+           ============================================ */
+        .explanation-section {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: var(--bg-panel);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+        }
+
+        .explanation-section h5 {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .explanation-section h5 i {
+            color: var(--accent-violet);
+        }
+
+        .explanation-summary {
+            background: rgba(99, 102, 241, 0.06);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-left: 4px solid var(--accent-indigo);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .explanation-summary h6 {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .explanation-detail-section {
+            background: var(--bg-panel-inner);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            border-radius: var(--radius-md);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 0.75rem;
+            transition: all var(--transition-fast);
+        }
+
+        .explanation-detail-section:hover {
+            border-color: var(--glass-border-hover);
+            background: var(--bg-panel-hover);
+            transform: translateX(4px);
+        }
+
+        .explanation-detail-section h6 {
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .explanation-detail-section h6 i {
+            transition: transform var(--transition-fast);
+        }
+
+        .explanation-detail-section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .explanation-detail-section ul li {
+            position: relative;
+            padding: 6px 0 6px 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .explanation-detail-section ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 14px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-violet);
+            opacity: 0.6;
+        }
+
+        /* ============================================
+           BATCH ANALYSIS SECTION
+           ============================================ */
+        .batch-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: var(--bg-panel);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            position: relative;
+        }
+
+        .batch-section::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 2rem;
+            right: 2rem;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--glass-border-hover), transparent);
+        }
+
+        .batch-section h3 {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .batch-section h3 i {
+            color: var(--accent-violet);
+            margin-right: 8px;
+        }
+
+        .batch-section .text-muted {
+            color: var(--text-muted) !important;
+            font-size: 0.9rem;
+        }
+
+        .batch-textarea {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1.5px solid rgba(99, 102, 241, 0.15);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            font-size: 0.95rem;
+            font-family: 'JetBrains Mono', 'Fira Code', 'Inter', monospace;
+            color: var(--text-primary);
+            resize: vertical;
+            min-height: 120px;
+            transition: all var(--transition-fast);
+            outline: none;
+        }
+
+        .batch-textarea::placeholder {
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .batch-textarea:focus {
+            border-color: var(--accent-violet);
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        }
+
+        .batch-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1.25rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        /* Custom checkbox */
+        .custom-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            user-select: none;
+        }
+
+        .custom-check input {
+            display: none;
+        }
+
+        .custom-check .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(99, 102, 241, 0.3);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+            flex-shrink: 0;
+        }
+
+        .custom-check .checkmark i {
+            font-size: 10px;
+            color: #fff;
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .custom-check input:checked+.checkmark {
+            background: var(--accent-indigo);
+            border-color: var(--accent-indigo);
+        }
+
+        .custom-check input:checked+.checkmark i {
+            opacity: 1;
+        }
+
+        /* Batch button */
+        .batch-btn {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1.5px solid rgba(99, 102, 241, 0.3);
+            border-radius: var(--radius-md);
+            padding: 12px 28px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            color: var(--accent-indigo);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .batch-btn:hover {
+            background: rgba(99, 102, 241, 0.2);
+            border-color: var(--accent-violet);
+            color: var(--accent-violet);
+            transform: translateY(-1px);
+        }
+
+        .batch-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ============================================
+           BATCH RESULTS
+           ============================================ */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-panel-inner);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            text-align: center;
+            transition: all var(--transition-fast);
+        }
+
+        .stat-card:hover {
+            border-color: var(--glass-border-hover);
+            transform: translateY(-2px);
+        }
+
+        .stat-number {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .stat-number.safe {
+            color: var(--accent-emerald);
+        }
+
+        .stat-number.danger {
+            color: var(--accent-rose);
+        }
+
+        .stat-number.warning {
+            color: var(--accent-amber);
+        }
+
+        .stat-number.total {
+            color: var(--accent-indigo);
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        /* Batch table */
+        .results-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1.5rem;
+        }
+
+        .results-table thead th {
+            background: var(--bg-table-header);
+            color: var(--text-muted);
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .results-table thead th:first-child {
+            border-radius: var(--radius-sm) 0 0 0;
+        }
+
+        .results-table thead th:last-child {
+            border-radius: 0 var(--radius-sm) 0 0;
+        }
+
+        .results-table tbody td {
+            padding: 12px 16px;
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(99, 102, 241, 0.06);
+            transition: background var(--transition-fast);
+        }
+
+        .results-table tbody tr:hover td {
+            background: rgba(99, 102, 241, 0.04);
+        }
+
+        .results-table .url-cell {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+        }
+
+        /* Badges */
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .badge-phishing {
+            background: rgba(244, 63, 94, 0.15);
+            color: var(--accent-rose);
+            border: 1px solid rgba(244, 63, 94, 0.25);
+        }
+
+        .badge-legitimate {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .badge-error {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        /* ============================================
+           ERROR ALERT
+           ============================================ */
+        .error-alert {
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.25);
+            border-radius: var(--radius-md);
+            padding: 1rem 1.5rem;
+            margin-top: 1.5rem;
+            color: var(--accent-rose);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: resultSlideUp 0.4s ease;
+        }
+
+        /* ============================================
+           FOOTER
+           ============================================ */
+        .footer {
+            text-align: center;
+            padding: 2rem 0 1rem;
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        .footer a {
+            color: var(--accent-violet);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .footer a:hover {
+            color: var(--accent-purple);
+        }
+
+        /* ============================================
+           RESPONSIVE
+           ============================================ */
+        @media (max-width: 768px) {
+            .main-container {
+                margin: 0 0.75rem;
+                border-radius: var(--radius-lg);
+            }
+
+            .analysis-section {
+                padding: 1.5rem;
+            }
+
+            .header-section h1 {
+                font-size: 1.8rem;
+            }
+
+            .header-section {
+                padding: 2.5rem 1.5rem 2rem;
+            }
+
+            .batch-options {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* ============================================
+           SCROLLBAR
+           ============================================ */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.25);
+            border-radius: 100px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.4);
+        }
+
+        /* ============================================
+           THEME TOGGLE
+           ============================================ */
+        .theme-toggle {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all var(--transition-fast);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-violet);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+        }
+
+        .theme-toggle i {
+            font-size: 1.2rem;
+            transition: transform 0.5s ease;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="particleCanvas"></canvas>
+
+    <div class="page-wrapper">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+            <i class="fas fa-sun" id="themeIcon"></i>
+        </button>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10 col-xl-9">
+                    <div class="main-container">
+
+                        <!-- ===== HERO HEADER ===== -->
+                        <div class="header-section">
+
+                            <h1>Phishing URL Detector</h1>
+                            <p class="lead">AI-powered phishing detection with explainable insights</p>
+
+                        </div>
+
+                        <!-- ===== ANALYSIS SECTION ===== -->
+                        <div class="analysis-section">
+
+                            <div class="section-label">
+                                <i class="fas fa-crosshairs" style="color: var(--accent-violet);"></i>
+                                Single URL Analysis
+                            </div>
+
+                            <!-- URL Input Row -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-8">
+                                    <div class="url-input-wrapper">
+                                        <input type="url" class="url-input" id="urlInput"
+                                            placeholder="Enter URL to analyze, e.g. https://example.com"
+                                            autocomplete="off" spellcheck="false">
+                                        <i class="fas fa-link url-input-icon"></i>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="model-select" id="modelSelect">
+                                        <option value="xgboost">XGBoost</option>
+                                        <option value="random_forest">Random Forest</option>
+                                        <option value="neural_network">Neural Network</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button class="analyze-btn" id="analyzeBtn">
+                                    <i class="fas fa-bolt me-2"></i>Analyze URL
+                                </button>
+                            </div>
+
+                            <!-- Loading Spinner -->
+                            <div class="loading-spinner" id="loadingSpinner">
+                                <div class="spinner-ring"></div>
+                                <p class="loading-text">Analyzing URL&hellip; This may take a few seconds.</p>
+                            </div>
+
+                            <!-- Results Section -->
+                            <div id="resultsSection"></div>
+
+                            <!-- ===== BATCH ANALYSIS ===== -->
+                            <div class="batch-section">
+                                <div class="section-label">
+                                    <i class="fas fa-layer-group" style="color: var(--accent-cyan);"></i>
+                                    Batch Analysis
+                                </div>
+                                <h3><i class="fas fa-list-check"></i>Batch Analysis</h3>
+                                <p class="text-muted">Analyze multiple URLs at once (max 100)</p>
+
+                                <textarea class="batch-textarea" id="batchUrls" rows="5"
+                                    placeholder="Enter URLs, one per line:&#10;https://example1.com&#10;https://example2.com&#10;http://suspicious-site.com"></textarea>
+
+                                <div class="batch-options">
+                                    <label class="custom-check">
+                                        <input type="checkbox" id="includeExplanations">
+                                        <span class="checkmark"><i class="fas fa-check"></i></span>
+                                        Include explanations (slower)
+                                    </label>
+
+                                    <button class="batch-btn" id="batchAnalyzeBtn">
+                                        <i class="fas fa-rocket me-2"></i>Batch Analyze
+                                    </button>
+                                </div>
+
+                                <!-- Batch Results -->
+                                <div id="batchResults"></div>
+                            </div>
+
+                        </div><!-- /analysis-section -->
+                    </div><!-- /main-container -->
+
+                    <div class="footer">
+                        Built with <i class="fas fa-heart" style="color: var(--accent-rose); margin: 0 2px;"></i> by
+                        PhishGuard &mdash; Powered by XAI &amp; Machine Learning
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        /* ============================================
+           THEME MANAGEMENT
+           ============================================ */
+        (function initTheme() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeIcon = document.getElementById('themeIcon');
+
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+
+            let isLight = false;
+
+            if (savedTheme === 'light' || (!savedTheme && systemPrefersLight)) {
+                isLight = true;
+                document.body.setAttribute('data-theme', 'light');
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+            }
+
+            themeToggle.addEventListener('click', () => {
+                isLight = !isLight;
+                if (isLight) {
+                    document.body.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    themeIcon.classList.remove('fa-sun');
+                    themeIcon.classList.add('fa-moon');
+                } else {
+                    document.body.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    themeIcon.classList.remove('fa-moon');
+                    themeIcon.classList.add('fa-sun');
+                }
+            });
+        })();
+
+        /* ============================================
+           PARTICLE BACKGROUND
+           ============================================ */
+        (function initParticles() {
+            const canvas = document.getElementById('particleCanvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            const PARTICLE_COUNT = 50;
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() { this.reset(); }
+
+                reset() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.3;
+                    this.vy = (Math.random() - 0.5) * 0.3;
+                    this.radius = Math.random() * 1.5 + 0.5;
+                    this.opacity = Math.random() * 0.35 + 0.05;
+                    this.hue = Math.random() < 0.5 ? 245 : 270; // indigo or violet
+                }
+
+                update() {
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = `hsla(${this.hue}, 80%, 70%, ${this.opacity})`;
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(new Particle());
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw connections
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(99, 102, 241, ${0.06 * (1 - dist / 150)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+
+                particles.forEach(p => { p.update(); p.draw(); });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        /* ============================================
+           PHISHING DETECTOR CLASS
+           ============================================ */
+        class PhishingDetector {
+            constructor() {
+                this.initializeEventListeners();
+                this.loadAvailableModels();
+            }
+
+            initializeEventListeners() {
+                document.getElementById('analyzeBtn').addEventListener('click', () => this.analyzeUrl());
+                document.getElementById('urlInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.analyzeUrl();
+                });
+                document.getElementById('batchAnalyzeBtn').addEventListener('click', () => this.batchAnalyze());
+            }
+
+            async loadAvailableModels() {
+                try {
+                    const response = await fetch('/models');
+                    const data = await response.json();
+
+                    if (data.available_models) {
+                        const select = document.getElementById('modelSelect');
+                        select.innerHTML = '';
+
+                        data.available_models.forEach(model => {
+                            const option = document.createElement('option');
+                            option.value = model;
+                            option.textContent = model.replace('_', ' ').toUpperCase();
+                            if (model === data.default_model) {
+                                option.selected = true;
+                            }
+                            select.appendChild(option);
+                        });
+                    }
+                } catch (error) {
+                    console.error('Failed to load models:', error);
+                }
+            }
+
+            async analyzeUrl() {
+                const urlInput = document.getElementById('urlInput');
+                const url = urlInput.value.trim();
+
+                if (!url) {
+                    this.showError('Please enter a URL to analyze');
+                    return;
+                }
+
+                const model = document.getElementById('modelSelect').value;
+                this.showLoading(true);
+
+                try {
+                    const response = await fetch('/analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url, model, explain: true })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.displayEnhancedResults(result);
+                    } else {
+                        this.showError(result.error || 'Analysis failed');
+                    }
+                } catch (error) {
+                    this.showError('Network error. Please try again.');
+                    console.error('Analysis error:', error);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            async batchAnalyze() {
+                const textarea = document.getElementById('batchUrls');
+                const urlsText = textarea.value.trim();
+
+                if (!urlsText) {
+                    this.showError('Please enter URLs for batch analysis');
+                    return;
+                }
+
+                const urls = urlsText.split('\n')
+                    .map(url => url.trim())
+                    .filter(url => url && !url.startsWith('#'));
+
+                if (urls.length === 0) { this.showError('No valid URLs found'); return; }
+                if (urls.length > 100) { this.showError('Maximum 100 URLs allowed per batch'); return; }
+
+                const model = document.getElementById('modelSelect').value;
+                const includeExplanations = document.getElementById('includeExplanations').checked;
+
+                this.showLoading(true);
+
+                try {
+                    const response = await fetch('/batch-analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            urls, model,
+                            explain: includeExplanations,
+                            explanation_level: 'basic'
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        this.displayBatchResults(result);
+                    } else {
+                        this.showError(result.error || 'Batch analysis failed');
+                    }
+                } catch (error) {
+                    this.showError('Network error. Please try again.');
+                    console.error('Batch analysis error:', error);
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            /* ---------- DISPLAY RESULTS ---------- */
+            displayEnhancedResults(result) {
+                const resultsSection = document.getElementById('resultsSection');
+                const predictionClass = result.prediction === 'phishing' ? 'phishing' : 'legitimate';
+                const confidenceClass = result.confidence > 0.8 ? 'high' : result.confidence > 0.5 ? 'medium' : 'low';
+                const riskText = result.risk_level.replace('_', ' ').toUpperCase();
+                const verdictIcon = result.prediction === 'phishing'
+                    ? '<i class="fas fa-exclamation-triangle verdict-icon"></i>'
+                    : '<i class="fas fa-check-circle verdict-icon"></i>';
+
+                let html = `
+                    <div class="result-card">
+                        <div class="result-header ${predictionClass}">
+                            <div class="result-verdict">
+                                ${verdictIcon}
+                                ${result.prediction.toUpperCase()} &mdash; ${riskText} RISK
+                            </div>
+                            <div class="confidence-big">
+                                <div class="number">${(result.confidence * 100).toFixed(1)}%</div>
+                                <div class="label">Confidence</div>
+                            </div>
+                        </div>
+
+                        <div class="result-body">
+                            <div class="detail-grid">
+                                <div class="detail-item">
+                                    <label>URL Analyzed</label>
+                                    <div class="url-display">${result.url}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Confidence Score</label>
+                                    <div class="value">${(result.confidence * 100).toFixed(1)}%</div>
+                                    <div class="confidence-bar">
+                                        <div class="confidence-fill ${confidenceClass}"
+                                             style="width: ${result.confidence * 100}%"></div>
+                                    </div>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Model Used</label>
+                                    <div class="value">${result.model_used.replace('_', ' ').toUpperCase()}</div>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Phishing Probability</label>
+                                    <div class="value">${(result.phishing_probability * 100).toFixed(1)}%</div>
+                                </div>
+                            </div>
+                `;
+
+                // Explanation rendering
+                if (result.explanation) {
+                    if (result.explanation.sections && Array.isArray(result.explanation.sections) && result.explanation.sections.length > 0) {
+                        html += `
+                            <div class="explanation-section">
+                                <h5><i class="fas fa-brain"></i> AI Analysis Explanation</h5>
+                                <div class="explanation-summary">
+                                    <h6><i class="fas fa-clipboard-list me-2"></i>Executive Summary</h6>
+                                    <p class="mb-0">${result.explanation.summary || 'Analysis completed successfully.'}</p>
+                                </div>
+                        `;
+
+                        result.explanation.sections.forEach((section, index) => {
+                            const sectionId = `section-${index}-${Date.now()}`;
+                            html += `
+                                <div class="explanation-detail-section">
+                                    <h6 data-bs-toggle="collapse" data-bs-target="#${sectionId}" aria-expanded="true">
+                                        ${section.title}
+                                        <i class="fas fa-chevron-down ms-auto" style="font-size: 0.75em;"></i>
+                                    </h6>
+                                    <div class="collapse show" id="${sectionId}">
+                            `;
+
+                            if (Array.isArray(section.content)) {
+                                html += `<ul>`;
+                                section.content.forEach(item => {
+                                    if (item && item.trim()) html += `<li>${item}</li>`;
+                                });
+                                html += `</ul>`;
+                            } else if (typeof section.content === 'string') {
+                                html += `<p class="mb-0" style="color: var(--text-secondary);">${section.content}</p>`;
+                            }
+
+                            html += `
+                                    </div>
+                                </div>
+                            `;
+                        });
+
+                        html += `</div>`;
+
+                    } else if (result.explanation.summary && typeof result.explanation.summary === 'string') {
+                        html += `
+                            <div class="explanation-section">
+                                <h5><i class="fas fa-brain"></i> AI Analysis Explanation</h5>
+                                <div class="explanation-summary">
+                                    <p class="mb-0">${result.explanation.summary}</p>
+                                </div>
+                            </div>
+                        `;
+
+                    } else if (typeof result.explanation === 'string') {
+                        html += `
+                            <div class="explanation-section">
+                                <h5><i class="fas fa-brain"></i> AI Explanation</h5>
+                                <div class="explanation-summary">
+                                    <p class="mb-0">${result.explanation}</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                html += `
+                        </div>
+                    </div>
+                `;
+
+                resultsSection.innerHTML = html;
+
+                // Wait for DOM layout and partial animation to settle before scrolling
+                setTimeout(() => {
+                    const card = resultsSection.querySelector('.result-card');
+                    if (card) {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }, 100);
+            }
+
+            /* ---------- BATCH RESULTS ---------- */
+            displayBatchResults(result) {
+                const batchResults = document.getElementById('batchResults');
+                const summary = result.summary;
+
+                let html = `
+                    <div style="margin-top: 2rem;">
+                        <h5 style="color: var(--text-primary);"><i class="fas fa-chart-bar me-2" style="color: var(--accent-cyan);"></i>Batch Results</h5>
+
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number total">${summary.total}</div>
+                                <div class="stat-label">Total Analyzed</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number safe">${summary.legitimate}</div>
+                                <div class="stat-label">Legitimate</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number danger">${summary.phishing}</div>
+                                <div class="stat-label">Phishing</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number warning">${summary.errors}</div>
+                                <div class="stat-label">Errors</div>
+                            </div>
+                        </div>
+
+                        <div style="overflow-x: auto;">
+                            <table class="results-table">
+                                <thead>
+                                    <tr>
+                                        <th>URL</th>
+                                        <th>Prediction</th>
+                                        <th>Confidence</th>
+                                        <th>Risk Level</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                `;
+
+                result.results.forEach(item => {
+                    if (item.prediction === 'error') {
+                        html += `
+                            <tr>
+                                <td class="url-cell">${item.url}</td>
+                                <td><span class="badge-pill badge-error"><i class="fas fa-times-circle"></i> Error</span></td>
+                                <td>&mdash;</td>
+                                <td>&mdash;</td>
+                            </tr>
+                        `;
+                    } else {
+                        const badgeClass = item.prediction === 'phishing' ? 'badge-phishing' : 'badge-legitimate';
+                        const badgeIcon = item.prediction === 'phishing' ? 'fa-skull-crossbones' : 'fa-check-circle';
+                        const riskLevel = item.risk_level ? item.risk_level.replace('_', ' ') : 'Unknown';
+
+                        html += `
+                            <tr>
+                                <td class="url-cell">${item.url}</td>
+                                <td><span class="badge-pill ${badgeClass}"><i class="fas ${badgeIcon}"></i> ${item.prediction}</span></td>
+                                <td style="color: var(--text-primary); font-weight: 600;">${(item.confidence * 100).toFixed(1)}%</td>
+                                <td style="color: var(--text-secondary);">${riskLevel}</td>
+                            </tr>
+                        `;
+                    }
+                });
+
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                batchResults.innerHTML = html;
+                setTimeout(() => {
+                    const y = batchResults.getBoundingClientRect().top + window.scrollY - 24;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }, 100);
+            }
+
+            /* ---------- UTILITIES ---------- */
+            showLoading(show) {
+                const spinner = document.getElementById('loadingSpinner');
+                const analyzeBtn = document.getElementById('analyzeBtn');
+                const batchBtn = document.getElementById('batchAnalyzeBtn');
+
+                if (show) {
+                    spinner.style.display = 'block';
+                    analyzeBtn.disabled = true;
+                    batchBtn.disabled = true;
+                    analyzeBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Analyzing…';
+                } else {
+                    spinner.style.display = 'none';
+                    analyzeBtn.disabled = false;
+                    batchBtn.disabled = false;
+                    analyzeBtn.innerHTML = '<i class="fas fa-bolt me-2"></i>Analyze URL';
+                }
+            }
+
+            showError(message) {
+                const resultsSection = document.getElementById('resultsSection');
+                resultsSection.innerHTML = `
+                    <div class="error-alert">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        ${message}
+                    </div>
+                `;
+                setTimeout(() => {
+                    const y = resultsSection.getBoundingClientRect().top + window.scrollY - 24;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                }, 100);
+            }
+        }
+
+        /* ============================================
+           INITIALIZE
+           ============================================ */
+        document.addEventListener('DOMContentLoaded', () => {
+            // Prevent scroll restoration on reload
+            if ('scrollRestoration' in history) {
+                history.scrollRestoration = 'manual';
+            }
+            window.scrollTo(0, 0);
+            
+            window.phishingDetector = new PhishingDetector();
+        });
+
+        /* Utility functions for console / external scripts */
+        async function quickAnalysis(url) {
+            const response = await fetch('/analyze-quick', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url })
+            });
+            return response.json();
+        }
+
+        async function comprehensiveAnalysis(url, model = 'xgboost') {
+            const response = await fetch('/analyze-comprehensive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url, model })
+            });
+            return response.json();
+        }
+    </script>
+</body>
+
+</html>
