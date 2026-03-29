@@ -5,6 +5,9 @@
 [![XGBoost](https://img.shields.io/badge/XGBoost-1.7.6-orange.svg)](https://xgboost.readthedocs.io/)
 [![LIME](https://img.shields.io/badge/LIME-0.2.0-purple.svg)](https://github.com/marcotcr/lime)
 [![SHAP](https://img.shields.io/badge/SHAP-0.42.1-red.svg)](https://shap.readthedocs.io/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Available-success)](https://phishguard-n52t.onrender.com)
+
+**🚀 Live Demo:** [https://phishguard-n52t.onrender.com](https://phishguard-n52t.onrender.com)
 
 A machine learning-powered web application that detects phishing websites in real-time and provides **human-readable explanations** using Explainable AI (LIME & SHAP). Built with a Flask backend and a modern, interactive web interface.
 
