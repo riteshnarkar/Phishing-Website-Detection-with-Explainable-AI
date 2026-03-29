@@ -49,14 +49,8 @@
   ],
   "training_history": {
     "random_forest": {
-      "best_params": {
-        "max_depth": 10,
-        "max_features": "sqrt",
-        "min_samples_leaf": 1,
-        "min_samples_split": 2,
-        "n_estimators": 100
-      },
-      "best_cv_score": 1.0,
+      "best_params": {},
+      "best_cv_score": -1,
       "cv_scores": [
         1.0,
         1.0,
@@ -66,40 +60,27 @@
       ],
       "cv_mean": 1.0,
       "cv_std": 0.0,
-      "training_time": 78.57962,
-      "trained_at": "2025-08-30T18:06:53.144790"
+      "training_time": 1.157349,
+      "trained_at": "2026-03-29T19:49:27.644567"
     },
     "xgboost": {
-      "best_params": {
-        "colsample_bytree": 0.8,
-        "learning_rate": 0.01,
-        "max_depth": 3,
-        "n_estimators": 100,
-        "subsample": 0.8
-      },
-      "best_cv_score": 1.0,
+      "best_params": {},
+      "best_cv_score": -1,
       "cv_scores": [
         1.0,
         1.0,
+        0.9993746091307067,
         1.0,
-        1.0,
-        1.0
+        0.9993753903810119
       ],
-      "cv_mean": 1.0,
-      "cv_std": 0.0,
-      "training_time": 93.698574,
-      "trained_at": "2025-08-30T18:08:27.549408"
+      "cv_mean": 0.9997499999023438,
+      "cv_std": 0.00030618643712193805,
+      "training_time": 0.299603,
+      "trained_at": "2026-03-29T19:49:29.406625"
     },
     "neural_network": {
-      "best_params": {
-        "activation": "relu",
-        "alpha": 0.0001,
-        "hidden_layer_sizes": [
-          100
-        ],
-        "learning_rate": "constant"
-      },
-      "best_cv_score": 1.0,
+      "best_params": {},
+      "best_cv_score": -1,
       "cv_scores": [
         1.0,
         1.0,
@@ -109,8 +90,8 @@
       ],
       "cv_mean": 1.0,
       "cv_std": 0.0,
-      "training_time": 24.430183,
-      "trained_at": "2025-08-30T18:08:57.226997"
+      "training_time": 1.893486,
+      "trained_at": "2026-03-29T19:49:38.642162"
     }
   },
   "label_encoder_classes": null
