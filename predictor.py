@@ -70,7 +70,11 @@ class PhishingPredictor:
         for model_name, filename in model_files.items():
             model_path = os.path.join(self.models_dir, filename)
             if os.path.exists(model_path):
-                self.models[model_name] = joblib.load(model_path)
+                model = joblib.load(model_path)
+                # Fix for newer XGBoost versions that removed use_label_encoder
+                if hasattr(model, 'use_label_encoder'):
+                    del model.use_label_encoder
+                self.models[model_name] = model
                 print(f"Loaded {model_name} model")
         
         if not self.models:
