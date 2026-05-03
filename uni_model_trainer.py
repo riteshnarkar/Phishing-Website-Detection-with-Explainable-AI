@@ -1113,7 +1113,11 @@ class UniversalModelTrainer:
         for model_name in metadata['models_available']:
             model_path = save_path / f'{model_name}_model.joblib'
             if model_path.exists():
-                self.models[model_name] = joblib.load(model_path)
+                model = joblib.load(model_path)
+                # Fix for newer XGBoost versions that removed use_label_encoder
+                if hasattr(model, 'use_label_encoder'):
+                    del model.use_label_encoder
+                self.models[model_name] = model
         
         # Load preprocessor
         preprocessor_path = save_path / 'preprocessor.joblib'
